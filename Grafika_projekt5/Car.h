@@ -23,6 +23,8 @@ public:
 
 	void Draw(glm::mat4& model, Shader& shader);
 
+	glm::mat4 Position(float current_frame);
+
 	~Car();
 
 	VItem car;

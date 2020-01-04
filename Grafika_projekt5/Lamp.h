@@ -21,7 +21,7 @@ public:
 	Lamp();
 
 	void Draw(glm::mat4& model, Shader& shader);
-	glm::vec3 LightPos{ 0.1, 1.166, -0.2 };
+	glm::vec3 LightPos{ 0.0855791, 1.135, -0.19072 };
 
 	~Lamp();
 
