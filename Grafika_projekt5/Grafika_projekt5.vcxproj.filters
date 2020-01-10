@@ -75,6 +75,9 @@
     <ClCompile Include="Lamp.cpp">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowMapFBO_m.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CarPos.h">
@@ -116,6 +119,9 @@
     <ClInclude Include="Lamp.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowMapFBO_m.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="mvp.vs">
@@ -128,6 +134,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shadow_mvp.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shadow_mvp.gs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

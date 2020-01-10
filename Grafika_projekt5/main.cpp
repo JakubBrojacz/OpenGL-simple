@@ -17,7 +17,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
-void renderQuad();
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -76,8 +75,7 @@ int main()
 	// build and compile our shader program
 	// ------------------------------------
 	Shader ourShader("mvp.vs", "mvp.fs");
-	Shader simpleDepthShader("shadow_mvp.vs", "shadow_mvp.fs");
-	Shader debugDepthQuad("3.1.3.debug_quad.vs", "3.1.3.debug_quad_depth.fs");
+	Shader simpleDepthShader("shadow_mvp.vs", "shadow_mvp.fs", "shadow_mvp.gs");
 
 
 	// set up shadow
@@ -85,20 +83,20 @@ int main()
 	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 	unsigned int depthMapFBO;
 	glGenFramebuffers(1, &depthMapFBO);
-	// create depth texture
-	unsigned int depthMap;
-	glGenTextures(1, &depthMap);
-	glBindTexture(GL_TEXTURE_2D, depthMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	// create depth cubemap texture
+	unsigned int depthCubemap;
+	glGenTextures(1, &depthCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+	for (unsigned int i = 0; i < 6; ++i)
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	// attach depth texture as FBO's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -112,10 +110,8 @@ int main()
 
 
 	// init shader params
-	debugDepthQuad.use();
-	debugDepthQuad.setInt("depthMap", 0);
 	ourShader.use();
-	ourShader.setInt("shadowMap", 1);
+	ourShader.setInt("depthMap", 1);
 	ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 	//ourShader.setVec4("ourColor", 0, 0, 1, 0);
 
@@ -155,32 +151,36 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		// 1. render depth of scene to texture(from light's perspective)
-		// --------------------------------------------------------------
-		glm::mat4 lightProjection, lightView;
-		glm::mat4 lightSpaceMatrix;
-		float near_plane = 1.0f, far_plane = 20.f;
-		lightProjection = glm::perspective(glm::radians(120.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
-		//lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-		lightView = glm::lookAt(lamp.LightPos, glm::vec3{ -6.17257,2.26399, 2.78777 }, glm::vec3(0.0, 1.0, 0.0));
-		lightSpaceMatrix = lightProjection * lightView;
-		// render scene from light's point of view
-		simpleDepthShader.use();
-		simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		// 0. create depth cubemap transformation matrices
+		// -----------------------------------------------
+		float near_plane = 1.0f;
+		float far_plane = 25.0f;
+		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
+		std::vector<glm::mat4> shadowTransforms;
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 
+
+		// 1. render scene to depth cubemap
+		// --------------------------------
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		//glActiveTexture(GL_TEXTURE0);
+		simpleDepthShader.use();
+		for (unsigned int i = 0; i < 6; ++i)
+			simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+		simpleDepthShader.setFloat("far_plane", far_plane);
+		simpleDepthShader.setVec3("lightPos", lamp.LightPos);
 		car.Draw(car_model, simpleDepthShader);
 		block.Draw(model, simpleDepthShader);
 		lamp.Draw(model, simpleDepthShader);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-		// reset viewport
-		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// 2. render scene as normal using the generated depth/shadow map  
 		// --------------------------------------------------------------
@@ -195,22 +195,12 @@ int main()
 		ourShader.setVec3("lightPos", lamp.LightPos);
 		ourShader.setVec3("viewPos", camera.Position);
 		// set light uniforms
-		ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		ourShader.setFloat("far_plane", far_plane);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 		car.Draw(car_model, ourShader);
 		block.Draw(model, ourShader);
 		lamp.Draw(model, ourShader);
-
-
-		// render Depth map to quad for visual debugging
-		// ---------------------------------------------
-		debugDepthQuad.use();
-		debugDepthQuad.setFloat("near_plane", near_plane);
-		debugDepthQuad.setFloat("far_plane", far_plane);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, depthMap);
-		renderQuad();
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -223,37 +213,6 @@ int main()
 	// ------------------------------------------------------------------
 	glfwTerminate();
 	return 0;
-}
-
-// renderQuad() renders a 1x1 XY quad in NDC
-// -----------------------------------------
-unsigned int quadVAO = 0;
-unsigned int quadVBO;
-void renderQuad()
-{
-	if (quadVAO == 0)
-	{
-		float quadVertices[] = {
-			// positions        // texture Coords
-			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-		};
-		// setup plane VAO
-		glGenVertexArrays(1, &quadVAO);
-		glGenBuffers(1, &quadVBO);
-		glBindVertexArray(quadVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	}
-	glBindVertexArray(quadVAO);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	glBindVertexArray(0);
 }
 
 
@@ -275,7 +234,11 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		std::cout <<"{" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << "}" << std::endl;
+	{
+		std::cout << "{" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << "}" << std::endl;
+		std::cout << "deltatime: " << deltaTime << std::endl;
+
+	}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

@@ -146,6 +146,7 @@
     <ClCompile Include="Lamp.cpp" />
     <ClCompile Include="LampPos.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ShadowMapFBO_m.cpp" />
     <ClCompile Include="WeelPos.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +160,7 @@
     <ClInclude Include="Lamp.h" />
     <ClInclude Include="LampPos.h" />
     <ClInclude Include="Shader_m.h" />
+    <ClInclude Include="ShadowMapFBO_m.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VItem.h" />
     <ClInclude Include="WeelPos.h" />
@@ -167,6 +169,7 @@
     <None Include="mvp.fs" />
     <None Include="mvp.vs" />
     <None Include="shadow_mvp.fs" />
+    <None Include="shadow_mvp.gs" />
     <None Include="shadow_mvp.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
