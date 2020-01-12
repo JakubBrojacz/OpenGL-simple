@@ -138,6 +138,7 @@
     <ClCompile Include="Camera_m.h" />
     <ClCompile Include="Car.cpp" />
     <ClCompile Include="CarPos.cpp" />
+    <ClCompile Include="DirectShadow.cpp" />
     <ClCompile Include="DrawUtils.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Block.cpp" />
@@ -146,26 +147,29 @@
     <ClCompile Include="Lamp.cpp" />
     <ClCompile Include="LampPos.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ShadowMapFBO_m.cpp" />
+    <ClCompile Include="PointShadow.cpp" />
     <ClCompile Include="WeelPos.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Car.h" />
     <ClInclude Include="CarPos.h" />
     <ClInclude Include="Block.h" />
+    <ClInclude Include="DirectShadow.h" />
     <ClInclude Include="DrawUtils.h" />
     <ClInclude Include="House.h" />
     <ClInclude Include="HouseParams.h" />
     <ClInclude Include="HousePos.h" />
     <ClInclude Include="Lamp.h" />
     <ClInclude Include="LampPos.h" />
+    <ClInclude Include="PointShadow.h" />
     <ClInclude Include="Shader_m.h" />
-    <ClInclude Include="ShadowMapFBO_m.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VItem.h" />
     <ClInclude Include="WeelPos.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="car_shadow_mvp.fs" />
+    <None Include="car_shadow_mvp.vs" />
     <None Include="mvp.fs" />
     <None Include="mvp.vs" />
     <None Include="shadow_mvp.fs" />

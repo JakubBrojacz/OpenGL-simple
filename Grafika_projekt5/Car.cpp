@@ -39,6 +39,91 @@ void Car::Draw(glm::mat4& model, Shader& shader)
 	glDrawArrays(GL_TRIANGLES, 0, weel.points.size() * sizeof(float));
 }
 
+glm::vec3 Car::PositionVec3(float current_frame)
+{
+	float currentFrame = (int)current_frame % 30 + (current_frame - (int)current_frame);
+	if (currentFrame < 9)
+	{
+		return glm::vec3{ -currentFrame, 0, 0 };
+	}
+	else if (currentFrame < 10)
+	{
+		float alpha = (currentFrame - 9) * glm::pi<float>() / 2;
+		return glm::vec3{ -9 - sin(alpha), 0, 1 - cos(alpha) };
+	}
+	else if (currentFrame < 14)
+	{
+		return glm::vec3{ -10 , 0, currentFrame - 9 };
+	}
+	else if (currentFrame < 15)
+	{
+		float alpha = (currentFrame - 14) * glm::pi<float>() / 2;
+		return glm::vec3{ -9 - cos(alpha), 0, 5 + sin(alpha) };
+	}
+	else if (currentFrame < 24)
+	{
+		return glm::vec3{ -9 + currentFrame - 15 , 0, 6 };
+	}
+	else if (currentFrame < 25)
+	{
+		float alpha = (currentFrame - 24) * glm::pi<float>() / 2;
+		return glm::vec3{ sin(alpha)  , 0, 5 + cos(alpha) };
+	}
+	else if (currentFrame < 29)
+	{
+		return glm::vec3{ 1, 0, 5 - (currentFrame - 25) };
+	}
+	else if (currentFrame < 30)
+	{
+		float alpha = (currentFrame - 29) * glm::pi<float>() / 2;
+		return glm::vec3{ cos(alpha), 0, 1 - sin(alpha) };
+	}
+	return glm::vec3{ 0,0,0 };
+}
+
+glm::vec3 Car::DirectionVec3(float current_frame)
+{
+	float currentFrame = (int)current_frame % 30 + (current_frame - (int)current_frame);
+	if (currentFrame < 9)
+	{
+		return glm::vec3{ -1,0,0 };
+	}
+	else if (currentFrame < 10)
+	{
+		float alpha = (currentFrame - 9) * glm::pi<float>() / 2;
+		return glm::vec3{ -cos(alpha),0,sin(alpha) };
+	}
+	else if (currentFrame < 14)
+	{
+		return glm::vec3{ 0,0,1 };
+	}
+	else if (currentFrame < 15)
+	{
+		float alpha = glm::pi<float>() / 2 + (currentFrame - 14) * glm::pi<float>() / 2;
+		return glm::vec3{ -cos(alpha),0,sin(alpha) };
+	}
+	else if (currentFrame < 24)
+	{
+		return glm::vec3{ 1,0,0 };
+	}
+	else if (currentFrame < 25)
+	{
+		float alpha = glm::pi<float>() + (currentFrame - 24) * glm::pi<float>() / 2;
+		return glm::vec3{ -cos(alpha),0,sin(alpha) };
+	}
+	else if (currentFrame < 29)
+	{
+		return glm::vec3{ 0,0,-1 };
+	}
+	else if (currentFrame < 30)
+	{
+		float alpha = glm::pi<float>()*3 / 2 + (currentFrame - 29) * glm::pi<float>() / 2;
+		return glm::vec3{ -cos(alpha),0,sin(alpha) };
+	}
+
+	return glm::vec3{ 0,0,0 };
+}
+
 glm::mat4 Car::Position(float current_frame)
 {
 	glm::mat4 car_model = glm::mat4(1.0f);

@@ -10,8 +10,14 @@
 #include "Car.h"
 #include "Block.h"
 #include "Lamp.h"
+
 #include "Shader_m.h"
 #include "Camera_m.h"
+
+#include "DirectShadow.h"
+#include "PointShadow.h"
+
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -23,7 +29,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 //camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3{-5.0348, 16.7644, 3.25239});
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -75,31 +81,15 @@ int main()
 	// build and compile our shader program
 	// ------------------------------------
 	Shader ourShader("mvp.vs", "mvp.fs");
-	Shader simpleDepthShader("shadow_mvp.vs", "shadow_mvp.fs", "shadow_mvp.gs");
 
 
-	// set up shadow
+	// set up point shadow
 	// ------------------------------------
-	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-	unsigned int depthMapFBO;
-	glGenFramebuffers(1, &depthMapFBO);
-	// create depth cubemap texture
-	unsigned int depthCubemap;
-	glGenTextures(1, &depthCubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-	for (unsigned int i = 0; i < 6; ++i)
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	// attach depth texture as FBO's depth buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	PointShadow lamp_light(1024, 1024, 0.5, 12);
+
+	// set up car reflector shadow
+	// ------------------------------------
+	DirectShadow car_reflector(1024, 1024, 0.1, 12, 90);
 
 
 	// create models
@@ -133,14 +123,12 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+
 		auto car_model = glm::mat4(1.0f);
 		car_model = car.Position(currentFrame);
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 		
-		//std::cout << camera.Position.x << ":" << camera.Position.y << ":" << camera.Position.z << std::endl;
-
-
 		// input
 		// -----
 		processInput(window);
@@ -153,31 +141,28 @@ int main()
 
 		// 0. create depth cubemap transformation matrices
 		// -----------------------------------------------
-		float near_plane = 1.0f;
-		float far_plane = 25.0f;
-		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
-		std::vector<glm::mat4> shadowTransforms;
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lamp.LightPos, lamp.LightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		float near_plane = 0.1f;
+		float far_plane = 12.0f;
+		//auto light_pos = car.PositionVec3(currentFrame);
+		auto light_pos = lamp.LightPos;
+		auto car_light_pos = car.PositionVec3(currentFrame);
 
 
 		// 1. render scene to depth cubemap
 		// --------------------------------
-		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		simpleDepthShader.use();
-		for (unsigned int i = 0; i < 6; ++i)
-			simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
-		simpleDepthShader.setFloat("far_plane", far_plane);
-		simpleDepthShader.setVec3("lightPos", lamp.LightPos);
-		car.Draw(car_model, simpleDepthShader);
-		block.Draw(model, simpleDepthShader);
-		lamp.Draw(model, simpleDepthShader);
+		lamp_light.RenderToDepthMap(light_pos);
+		car.Draw(car_model, lamp_light.depthShader);
+		block.Draw(model, lamp_light.depthShader);
+		lamp.Draw(model, lamp_light.depthShader);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		// 1.5. render scene to depth car reflector map
+		// --------------------------------
+		car_reflector.RenderToDepthMap(car_light_pos + glm::vec3{ 0,1,0 }, car.DirectionVec3(currentFrame));
+		car.Draw(car_model, car_reflector.depthShader);
+		block.Draw(model, car_reflector.depthShader);
+		lamp.Draw(model, car_reflector.depthShader);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -192,12 +177,15 @@ int main()
 		projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
-		ourShader.setVec3("lightPos", lamp.LightPos);
+		ourShader.setVec3("lightPos", light_pos);
 		ourShader.setVec3("viewPos", camera.Position);
 		// set light uniforms
 		ourShader.setFloat("far_plane", far_plane);
+		ourShader.setMat4("lightSpaceMatrix", car_reflector.lightSpaceMatrix);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, lamp_light.depthCubeMap);
+		/*glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, car_reflector.depthMap);*/
 		car.Draw(car_model, ourShader);
 		block.Draw(model, ourShader);
 		lamp.Draw(model, ourShader);
@@ -216,9 +204,13 @@ int main()
 }
 
 
+void renderScene(Shader& shader)
+{
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
+}
+
+
+
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -241,18 +233,13 @@ void processInput(GLFWwindow* window)
 	}
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	// make sure the viewport matches the new window dimensions; note that width and 
-	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
 }
 
 
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	if (firstMouse)
@@ -271,8 +258,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
+
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera.ProcessMouseScroll(yoffset);

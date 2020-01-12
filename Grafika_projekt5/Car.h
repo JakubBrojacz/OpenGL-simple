@@ -23,6 +23,10 @@ public:
 
 	void Draw(glm::mat4& model, Shader& shader);
 
+	glm::vec3 PositionVec3(float current_frame);
+
+	glm::vec3 DirectionVec3(float current_frame);
+
 	glm::mat4 Position(float current_frame);
 
 	~Car();

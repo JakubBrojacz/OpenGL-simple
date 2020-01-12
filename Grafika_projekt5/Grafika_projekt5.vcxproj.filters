@@ -37,6 +37,12 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{3e5e607f-2a97-471f-8cf2-0b60f4e5123b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Shadows">
+      <UniqueIdentifier>{2f14cd90-b30e-4b40-b993-89567d1e3db1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shadows">
+      <UniqueIdentifier>{caaee544-1290-4318-a34f-d336723ae0df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -75,8 +81,11 @@
     <ClCompile Include="Lamp.cpp">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="ShadowMapFBO_m.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="PointShadow.cpp">
+      <Filter>Source Files\Shadows</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShadow.cpp">
+      <Filter>Source Files\Shadows</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -119,8 +128,11 @@
     <ClInclude Include="Lamp.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowMapFBO_m.h">
-      <Filter>Header Files\Utils</Filter>
+    <ClInclude Include="PointShadow.h">
+      <Filter>Header Files\Shadows</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShadow.h">
+      <Filter>Header Files\Shadows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +149,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shadow_mvp.gs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="car_shadow_mvp.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="car_shadow_mvp.vs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
