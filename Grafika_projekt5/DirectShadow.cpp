@@ -25,7 +25,7 @@ DirectShadow::DirectShadow(const int shadow_width, const int shadow_height,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	float borderColor[] = { 0.0, 0.0, 0.0, 0.0 };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	// attach depth texture as FBO's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -43,6 +43,7 @@ void DirectShadow::RenderToDepthMap(glm::vec3 positon, glm::vec3 direction)
 	
 	depthShader.use();
 	depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+	depthShader.setVec3("lightPos", positon);
 
 	glViewport(0, 0, shadow_width, shadow_height);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);

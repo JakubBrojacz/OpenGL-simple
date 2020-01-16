@@ -1,5 +1,4 @@
 #pragma once
-#include <array>
 #include <vector>
 
 #include <glad\glad.h>
@@ -16,21 +15,14 @@
 #include "VItem.h"
 
 
-class Car
+class Floor
 {
 public:
-	Car();
+	Floor();
 
 	void Draw(glm::mat4& model, Shader& shader);
 
-	glm::vec3 PositionVec3(float current_frame);
+	~Floor();
 
-	float Rotation(float current_frame);
-
-	glm::mat4 Model(float current_frame);
-
-	~Car();
-
-	VItem car;
-	VItem weel;
+	VItem floor;
 };

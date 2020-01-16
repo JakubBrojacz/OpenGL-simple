@@ -87,6 +87,9 @@
     <ClCompile Include="DirectShadow.cpp">
       <Filter>Source Files\Shadows</Filter>
     </ClCompile>
+    <ClCompile Include="Floor.cpp">
+      <Filter>Source Files\Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CarPos.h">
@@ -133,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="DirectShadow.h">
       <Filter>Header Files\Shadows</Filter>
+    </ClInclude>
+    <ClInclude Include="Floor.h">
+      <Filter>Header Files\Entities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
