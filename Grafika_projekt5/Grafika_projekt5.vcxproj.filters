@@ -43,11 +43,11 @@
     <Filter Include="Source Files\Shadows">
       <UniqueIdentifier>{caaee544-1290-4318-a34f-d336723ae0df}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\External">
+      <UniqueIdentifier>{2e9bb674-0e1f-44ab-bddc-96901e973834}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CarPos.cpp">
       <Filter>Source Files\Positions</Filter>
     </ClCompile>
@@ -89,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="Floor.cpp">
       <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="main_assimp.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +143,15 @@
     <ClInclude Include="Floor.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="Model_m.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh_m.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="mvp.vs">
@@ -161,6 +173,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="car_shadow_mvp.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="1.model_loading.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="1.model_loading.fs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -106,6 +106,6 @@ void main()
     
     //FragColor = vec4(lighting, 1.0);
     //FragColor = vec4(lightingCar, 1.0);
-    FragColor = vec4(max(lighting, lightingCar), 1.0);
+    FragColor = vec4((2.5-length(viewPos-fs_in.FragPos)/2)*max(lighting, lightingCar), 1.0);
 }
 
