@@ -41,42 +41,46 @@ void Car::Draw(glm::mat4& model, Shader& shader)
 
 glm::vec3 Car::PositionVec3(float current_frame)
 {
+	//{21.8072, 11.3534, -9.24598}
+	//{-24.3647, 11.2711, 7.90922}
+	//{-23.9164, 11.5306, -8.11911}
+	//{23.9164, 11.5306, 8.11911}
 	float currentFrame = (int)current_frame % 30 + (current_frame - (int)current_frame);
 	if (currentFrame < 9)
 	{
-		return glm::vec3{ -currentFrame, 0, 0 };
+		return glm::vec3{ -5.1*currentFrame+23, 11, -8 };
 	}
 	else if (currentFrame < 10)
 	{
 		float alpha = (currentFrame - 9) * glm::pi<float>() / 2;
-		return glm::vec3{ -9 - sin(alpha), 0, 1 - cos(alpha) };
+		return glm::vec3{ -22.9 - sin(alpha), 11, -7 - cos(alpha) };
 	}
 	else if (currentFrame < 14)
 	{
-		return glm::vec3{ -10 , 0, currentFrame - 9 };
+		return glm::vec3{ -23.9 , 11, 3.5f*(currentFrame - 10) - 7 };
 	}
 	else if (currentFrame < 15)
 	{
 		float alpha = (currentFrame - 14) * glm::pi<float>() / 2;
-		return glm::vec3{ -9 - cos(alpha), 0, 5 + sin(alpha) };
+		return glm::vec3{ -22.9 - cos(alpha), 11, 7 + sin(alpha) };
 	}
 	else if (currentFrame < 24)
 	{
-		return glm::vec3{ -9 + currentFrame - 15 , 0, 6 };
+		return glm::vec3{ -22.9 + 5.1f*(currentFrame - 15) , 11, 8 };
 	}
 	else if (currentFrame < 25)
 	{
 		float alpha = (currentFrame - 24) * glm::pi<float>() / 2;
-		return glm::vec3{ sin(alpha), 0, 5 + cos(alpha) };
+		return glm::vec3{ 22.9+sin(alpha), 11, 7 + cos(alpha) };
 	}
 	else if (currentFrame < 29)
 	{
-		return glm::vec3{ 1, 0, 5 - (currentFrame - 25) };
+		return glm::vec3{ 23.9, 11, 7 - 3.5f*(currentFrame - 25) };
 	}
 	else if (currentFrame < 30)
 	{
 		float alpha = (currentFrame - 29) * glm::pi<float>() / 2;
-		return glm::vec3{ cos(alpha), 0, 1 - sin(alpha) };
+		return glm::vec3{ 22.9+cos(alpha), 11, -7 - sin(alpha) };
 	}
 	return glm::vec3{ 0,0,0 };
 }
