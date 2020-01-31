@@ -47,6 +47,7 @@ struct CameraMode
 auto cameraMode = CameraMode::Free;
 
 
+
 int main()
 {
 	// glfw: initialize and configure
@@ -87,7 +88,7 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("1.model_loading.vs", "1.model_loading.fs");
+	Shader ourShader("book.vs", "book.fs");
 
 	// load models
 	// -----------
@@ -112,8 +113,8 @@ int main()
 
 	// init shader params
 	ourShader.use();
-	ourShader.setInt("depthMap", 1);
-	ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	/*ourShader.setInt("depthMap", 1);
+	ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);*/
 	//ourShader.setVec4("ourColor", 0, 0, 1, 0);
 
 
@@ -182,25 +183,25 @@ int main()
 			break;
 		}
 
-		// 1. render scene to depth cubemap
-		// --------------------------------
-		lamp_light.RenderToDepthMap(light_pos);
-		lamp_light.depthShader.setMat4("model", sponza_model);
-		Sponza.Draw(lamp_light.depthShader);
-		/*lamp_light.depthShader.setMat4("model", car_model);
-		ridingCar.Draw(lamp_light.depthShader);*/
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//// 1. render scene to depth cubemap
+		//// --------------------------------
+		//lamp_light.RenderToDepthMap(light_pos);
+		//lamp_light.depthShader.setMat4("model", sponza_model);
+		//Sponza.Draw(lamp_light.depthShader);
+		///*lamp_light.depthShader.setMat4("model", car_model);
+		//ridingCar.Draw(lamp_light.depthShader);*/
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-		// 1.5. render scene to depth car reflector map
-		// --------------------------------
-		//car_reflector.RenderToDepthMap(car_light_pos, car_light_direction);
-		car_reflector.RenderToDepthMap(camera.Position, camera.Front);
-		car_reflector.depthShader.setMat4("model", sponza_model);
-		Sponza.Draw(car_reflector.depthShader);
-		/*car_reflector.depthShader.setMat4("model", car_model);
-		ridingCar.Draw(car_reflector.depthShader);*/
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//// 1.5. render scene to depth car reflector map
+		//// --------------------------------
+		////car_reflector.RenderToDepthMap(car_light_pos, car_light_direction);
+		//car_reflector.RenderToDepthMap(camera.Position, camera.Front);
+		//car_reflector.depthShader.setMat4("model", sponza_model);
+		//Sponza.Draw(car_reflector.depthShader);
+		///*car_reflector.depthShader.setMat4("model", car_model);
+		//ridingCar.Draw(car_reflector.depthShader);*/
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
 
@@ -214,28 +215,44 @@ int main()
 
 		// view/projection transformations
 		projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
-		ourShader.setVec3("lightPos", light_pos);
-		ourShader.setVec3("viewPos", camera.Position);
-		// set light uniforms
-		ourShader.setFloat("far_plane", far_plane);
-		ourShader.setVec3("lightPosCar", car_light_pos);
-		ourShader.setMat4("lightSpaceMatrix", car_reflector.lightSpaceMatrix);
-		glActiveTexture(GL_TEXTURE1);
+		//ourShader.setMat4("projection", projection);
+		//ourShader.setMat4("view", view);
+		//ourShader.setVec3("lightPos", light_pos);
+		//ourShader.setVec3("viewPos", camera.Position);
+		//// set light uniforms
+		//ourShader.setFloat("far_plane", far_plane);
+		//ourShader.setVec3("lightPosCar", car_light_pos);
+		//ourShader.setMat4("lightSpaceMatrix", car_reflector.lightSpaceMatrix);
+	/*	glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, lamp_light.depthCubeMap);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, car_reflector.depthMap);
+		glBindTexture(GL_TEXTURE_2D, car_reflector.depthMap);*/
 
 		// render the loaded model
-		ourShader.setMat4("model", sponza_model);
+		auto ModelViewMatrix = sponza_model;
+		glm::mat3 NormalMatrix = glm::transpose(glm::inverse(glm::mat3(ModelViewMatrix)));
+		auto ProjectionMatrix = projection;
+		auto MVP = ProjectionMatrix * view * ModelViewMatrix;
+		ourShader.setMat4("ModelViewMatrix", ModelViewMatrix);
+		ourShader.setMat3("NormalMatrix", NormalMatrix);
+		ourShader.setMat4("ProjectionMatrix", ProjectionMatrix);
+		ourShader.setMat4("MVP", MVP);
+		ourShader.setVec4("Spot.position", glm::vec4(car_light_pos, 1));
+		ourShader.setVec3("Spot.intensity", 10.0f, 10.0f, 10.0f);
+		ourShader.setVec3("Spot.direction", car_light_direction);
+		ourShader.setFloat("Spot.exponent", 1);
+		ourShader.setFloat("Spot.cutoff", 45);
+		ourShader.setVec3("Kd", 0.2, 0.2, 0.2);
+		ourShader.setVec3("Ka", 0.1, 0.1, 0.1);
+		ourShader.setVec3("Ks", 0.3, 0.3, 0.3);
+		ourShader.setFloat("Shininess", 0.1);
 		Sponza.Draw(ourShader);
-		ourShader.setMat4("model", car_model);
-		ridingCar.Draw(ourShader);
+		/*	ourShader.setMat4("model", car_model);
+			ridingCar.Draw(ourShader);*/
 
 
-		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-		// -------------------------------------------------------------------------------
+			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+			// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

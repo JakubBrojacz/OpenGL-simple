@@ -177,6 +177,7 @@
     <None Include="1.model_loading.fs" />
     <None Include="1.model_loading.vs" />
     <None Include="book.fs" />
+    <None Include="book.vs" />
     <None Include="car_shadow_mvp.fs" />
     <None Include="car_shadow_mvp.vs" />
     <None Include="mvp.fs" />

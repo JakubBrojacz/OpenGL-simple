@@ -187,5 +187,8 @@
     <None Include="book.fs">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="book.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
