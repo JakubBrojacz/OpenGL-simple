@@ -3,6 +3,7 @@
 in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoords;
+in vec4 ShadowCoord;
 
 struct SpotLightInfo
 {
@@ -19,25 +20,27 @@ uniform vec3 Ka;
 uniform vec3 Ks;
 uniform float Shininess;
 
+uniform vec3 ViewPosition;
+uniform float FogIntensity;
+uniform float FogStart;
+uniform float FogEnd;
+
 uniform sampler2D texture_diffuse1;
+
+uniform sampler2DShadow ShadowMap;
 
 layout( location = 0 ) out vec4 FragColor;
 
-vec3 phongModel( vec4 position, vec3 norm ) 
+
+subroutine void RenderPassType();
+subroutine uniform RenderPassType RenderPass;
+
+subroutine (RenderPassType)
+void recordDepth()
 {
-    vec3 s = normalize(vec3(Light.Position - position));    
-    vec3 v = normalize(-position.xyz);    
-    vec3 r = reflect( -s, norm );    
-    vec3 ambient = Light.La * Material.Ka;    
-    float sDotN = max( dot(s,norm), 0.0 );    
-    vec3 diffuse = Light.Ld * Material.Kd * sDotN;    
-    vec3 spec = vec3(0.0);    
-    if( sDotN > 0.0 )        
-    {
-        spec = Light.Ls * Material.Ks * pow( max( dot(r,v), 0.0 ), Material.Shininess );
-    }
-    return ambient + diffuse + spec; 
+    
 }
+
 
 vec3 ads()
 {
@@ -50,24 +53,40 @@ vec3 ads()
     vec3 s = normalize( vec3( Spot.position ) - Position );
     float angle = acos( dot(-s, Spot.direction) );
     float cutoff = radians( clamp( Spot.cutoff, 0, 90 ) );
-    vec3 ambient = objectColor * Ka;
+    vec3 ambient = Ka;
 
     if(angle < cutoff)
     {
-        float spotFactor = pow( dot(-s, Spot.direction), Spot.exponent);
+        // float spotFactor = pow( (dot(-s, Spot.direction), Spot.exponent);
+        float spotFactor = cutoff-angle;
         vec3 v = normalize(vec3(-Position));
         vec3 h = normalize(v+s);
-        // return Normal;
-        // return vec3(max(dot(s, Normal), 0), max(dot(s, Normal), 0), max(dot(s, Normal), 0));
-        return ambient + spotFactor * Spot.intensity * (Kd * max(dot(s, Normal), 0) + Ks * pow(max(dot(h, Normal), 0), Shininess));
+        vec3 specular = spotFactor * Spot.intensity * Kd * max(dot(s, Normal), 0);
+        vec3 diffuse = spotFactor * Spot.intensity* Ks * pow(max(dot(h, Normal), 0), Shininess);
+
+        float shadow = textureProj(ShadowMap, ShadowCoord);
+
+        return objectColor * ambient + objectColor * shadow * diffuse + shadow * specular;
     }
     else
     {
-        return ambient;
+        return objectColor * ambient;
     }
+}
+
+float fog(vec3 viewPos, vec3 pos)
+{
+    return min((FogEnd - length(viewPos - pos)) / (FogEnd - FogStart), 1);
+}
+
+subroutine (RenderPassType)
+void shadeWithShadow()
+{
+    vec4 c = vec4(ads(), 1);
+    FragColor = FogIntensity*fog(ViewPosition, Position)*c + (1 - FogIntensity)*c;
 }
 
 void main()
 {
-    FragColor = vec4(ads(), 1);
+    RenderPass();
 }

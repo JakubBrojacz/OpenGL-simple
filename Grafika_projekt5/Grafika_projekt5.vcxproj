@@ -141,6 +141,7 @@
     <ClCompile Include="DirectShadow.cpp" />
     <ClCompile Include="DrawUtils.cpp" />
     <ClCompile Include="Floor.cpp" />
+    <ClCompile Include="Fog.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Block.cpp" />
     <ClCompile Include="House.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="DirectShadow.h" />
     <ClInclude Include="DrawUtils.h" />
     <ClInclude Include="Floor.h" />
+    <ClInclude Include="Fog.h" />
     <ClInclude Include="House.h" />
     <ClInclude Include="HouseParams.h" />
     <ClInclude Include="HousePos.h" />

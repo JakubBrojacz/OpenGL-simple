@@ -10,6 +10,7 @@
 #include "Car.h"
 #include "Block.h"
 #include "Lamp.h"
+#include "Fog.h"
 
 #include "Shader_m.h"
 #include "Camera_m.h"
@@ -38,6 +39,8 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+Fog fog(5, 10, 20);
 
 
 struct CameraMode
@@ -86,6 +89,42 @@ int main()
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
 
+	// create shadow map
+	GLfloat border[] = { 1.0f,0.0f,0.0f,0.0f };
+	int shadowMapWidth = 1024;
+	int shadowMapHeight = 1024;
+
+	GLuint shadowFBO;
+	GLuint depthTex;
+	glGenTextures(1, &depthTex);
+	glBindTexture(GL_TEXTURE_2D, depthTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		shadowMapWidth, shadowMapHeight,
+		0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
+
+	//Assign the shadow map to texture channel 0 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthTex);
+
+	//Create and set up the FBO 
+	glGenFramebuffers(1, &shadowFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+
+	GLenum drawBuffers[] = { GL_NONE };
+	glDrawBuffers(1, drawBuffers);
+	// Revert to the default framebuffer for now 
+	glBindFramebuffer(GL_FRAMEBUFFER,0); 
+
+
 	// build and compile shaders
 	// -------------------------
 	Shader ourShader("book.vs", "book.fs");
@@ -95,28 +134,10 @@ int main()
 	Model Sponza("../models/sponza/sponza.obj");
 	Model ridingCar("../models/formula1/Formula_1_mesh.obj");
 
-
-	// set up point shadow
-	// ------------------------------------
-	PointShadow lamp_light(1024, 1024, 0.5, 12);
-
-	// set up car reflector shadow
-	// ------------------------------------
-	DirectShadow car_reflector(1024, 1024, 0.1, 24, 60);
-
-	// create models
-	// ------------------------------------
 	Car car;
-	Block block;
-	Lamp lamp;
-	Floor floor;
 
 	// init shader params
 	ourShader.use();
-	/*ourShader.setInt("depthMap", 1);
-	ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);*/
-	//ourShader.setVec4("ourColor", 0, 0, 1, 0);
-
 
 	// init mvp matrices
 	// ------------------------------------
@@ -133,6 +154,7 @@ int main()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		fog.Update(deltaTime);
 
 		// input
 		// -----
@@ -145,17 +167,16 @@ int main()
 
 		// 0. Init per-loop variables
 		// -----------------------------------------------
-		auto car_model = car.Model(currentFrame);
+		auto car_model = glm::translate(car.Model(currentFrame), glm::vec3{ 0, -2.7, 0 });
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
 			(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 
 		float near_plane = 0.1f;
 		float far_plane = 12.0f;
-		auto light_pos = lamp.LightPos;
 		auto car_rotation = car.Rotation(currentFrame);
 		auto car_light_direction = glm::vec3{ -cos(car_rotation),0,sin(car_rotation) };
-		auto car_light_pos = car.PositionVec3(currentFrame) + glm::vec3{ 0,0,0 };
+		auto car_light_pos = car.PositionVec3(currentFrame) + glm::vec3{ 0,-1,0 };
 		car_light_pos += glm::vec3{ 0.2 * sin(car_rotation),0,0.2 * cos(car_rotation) };
 
 		glm::mat4 sponza_model = glm::mat4(1.0f);
@@ -183,27 +204,6 @@ int main()
 			break;
 		}
 
-		//// 1. render scene to depth cubemap
-		//// --------------------------------
-		//lamp_light.RenderToDepthMap(light_pos);
-		//lamp_light.depthShader.setMat4("model", sponza_model);
-		//Sponza.Draw(lamp_light.depthShader);
-		///*lamp_light.depthShader.setMat4("model", car_model);
-		//ridingCar.Draw(lamp_light.depthShader);*/
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-		//// 1.5. render scene to depth car reflector map
-		//// --------------------------------
-		////car_reflector.RenderToDepthMap(car_light_pos, car_light_direction);
-		//car_reflector.RenderToDepthMap(camera.Position, camera.Front);
-		//car_reflector.depthShader.setMat4("model", sponza_model);
-		//Sponza.Draw(car_reflector.depthShader);
-		///*car_reflector.depthShader.setMat4("model", car_model);
-		//ridingCar.Draw(car_reflector.depthShader);*/
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
 
 		// 2. render scene as normal using the generated depth/shadow map  
 		// --------------------------------------------------------------
@@ -215,44 +215,38 @@ int main()
 
 		// view/projection transformations
 		projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		//ourShader.setMat4("projection", projection);
-		//ourShader.setMat4("view", view);
-		//ourShader.setVec3("lightPos", light_pos);
-		//ourShader.setVec3("viewPos", camera.Position);
-		//// set light uniforms
-		//ourShader.setFloat("far_plane", far_plane);
-		//ourShader.setVec3("lightPosCar", car_light_pos);
-		//ourShader.setMat4("lightSpaceMatrix", car_reflector.lightSpaceMatrix);
-	/*	glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, lamp_light.depthCubeMap);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, car_reflector.depthMap);*/
 
 		// render the loaded model
-		auto ModelViewMatrix = sponza_model;
-		glm::mat3 NormalMatrix = glm::transpose(glm::inverse(glm::mat3(ModelViewMatrix)));
-		auto ProjectionMatrix = projection;
-		auto MVP = ProjectionMatrix * view * ModelViewMatrix;
-		ourShader.setMat4("ModelViewMatrix", ModelViewMatrix);
-		ourShader.setMat3("NormalMatrix", NormalMatrix);
-		ourShader.setMat4("ProjectionMatrix", ProjectionMatrix);
-		ourShader.setMat4("MVP", MVP);
+		ourShader.setMat4("ProjectionMatrix", projection);
+		ourShader.setVec3("ViewPosition", camera.Position);
+
+		ourShader.setFloat("FogStart", fog.start);
+		ourShader.setFloat("FogEnd", fog.end);
+		ourShader.setFloat("FogIntensity", fog.intensity);
+
 		ourShader.setVec4("Spot.position", glm::vec4(car_light_pos, 1));
-		ourShader.setVec3("Spot.intensity", 10.0f, 10.0f, 10.0f);
+		ourShader.setVec3("Spot.intensity", 1.0f, 1.0f, 1.0f);
 		ourShader.setVec3("Spot.direction", car_light_direction);
-		ourShader.setFloat("Spot.exponent", 1);
-		ourShader.setFloat("Spot.cutoff", 45);
+		ourShader.setFloat("Spot.exponent", 0.1);
+		ourShader.setFloat("Spot.cutoff", 30);
+
 		ourShader.setVec3("Kd", 0.2, 0.2, 0.2);
 		ourShader.setVec3("Ka", 0.1, 0.1, 0.1);
 		ourShader.setVec3("Ks", 0.3, 0.3, 0.3);
 		ourShader.setFloat("Shininess", 0.1);
+
+		ourShader.setMat4("ModelViewMatrix", sponza_model);
+		ourShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
+		ourShader.setMat4("MVP", projection * view * sponza_model);
 		Sponza.Draw(ourShader);
-		/*	ourShader.setMat4("model", car_model);
-			ridingCar.Draw(ourShader);*/
+		ourShader.setMat4("ModelViewMatrix", car_model);
+		ourShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
+		ourShader.setMat4("MVP", projection * view * car_model);
+		ridingCar.Draw(ourShader);
 
 
-			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-			// -------------------------------------------------------------------------------
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -307,6 +301,16 @@ void processInput(GLFWwindow* window)
 	{
 		std::cout << "Camera free /debug mode/" << std::endl;
 		cameraMode = CameraMode::Free;
+	}
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	{
+		std::cout << "Start fog" << std::endl;
+		fog.Begin();
+	}
+	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+	{
+		std::cout << "End fog" << std::endl;
+		fog.End();
 	}
 }
 
