@@ -31,7 +31,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(30, 30, 30));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -128,6 +128,10 @@ int main()
 	// build and compile shaders
 	// -------------------------
 	Shader ourShader("book.vs", "book.fs");
+	Shader shadowShader("book.vs", "book_shadows.fs");
+
+	// init shader params
+	ourShader.use();
 
 	// load models
 	// -----------
@@ -136,14 +140,17 @@ int main()
 
 	Car car;
 
-	// init shader params
-	ourShader.use();
-
 	// init mvp matrices
 	// ------------------------------------
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 projection = glm::mat4(1.0f);
+	glm::mat4 shadowMatrix{
+			0.5, 0, 0, 0.5,
+			0, 0.5, 0, 0.5,
+			0, 0, 0.5, 0.5,
+			0, 0, 0, 1
+	};
 
 	// render loop
 	// -----------
@@ -205,18 +212,51 @@ int main()
 		}
 
 
+		// 1. render scene for shadow map  
+		// --------------------------------------------------------------
+		glm::mat4 lightProjection, lightView;
+		float near_plane1 = 1.0f, far_plane1 = 100.f;
+		lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane1, far_plane1);
+		lightView = glm::lookAt(glm::vec3{ 0, 50, 0 }, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		// render scene from light's point of view
+		glViewport(0, 0, shadowMapWidth, shadowMapHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//glEnable(GL_FRONT_FACE);
+
+		shadowShader.use();
+
+		shadowShader.setMat4("ShadowMatrix", shadowMatrix);
+
+		shadowShader.setMat4("ProjectionMatrix", lightProjection);
+		shadowShader.setVec3("ViewPosition", glm::vec3{ 30, 30, 30 });
+
+		shadowShader.setMat4("ModelViewMatrix", sponza_model);
+		shadowShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
+		shadowShader.setMat4("MVP", lightProjection * lightView * sponza_model);
+		Sponza.Draw(shadowShader);
+		shadowShader.setMat4("ModelViewMatrix", car_model);
+		shadowShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
+		shadowShader.setMat4("MVP", lightProjection * lightView * car_model);
+		ridingCar.Draw(shadowShader);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
 		// 2. render scene as normal using the generated depth/shadow map  
 		// --------------------------------------------------------------
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		ourShader.use();
 
-
-
 		// view/projection transformations
 		projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		//projection = lightProjection;
 
 		// render the loaded model
+		ourShader.setMat4("ShadowMatrix", shadowMatrix);
+		
 		ourShader.setMat4("ProjectionMatrix", projection);
 		ourShader.setVec3("ViewPosition", camera.Position);
 

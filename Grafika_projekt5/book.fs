@@ -32,15 +32,6 @@ uniform sampler2DShadow ShadowMap;
 layout( location = 0 ) out vec4 FragColor;
 
 
-subroutine void RenderPassType();
-subroutine uniform RenderPassType RenderPass;
-
-subroutine (RenderPassType)
-void recordDepth()
-{
-    
-}
-
 
 vec3 ads()
 {
@@ -55,18 +46,21 @@ vec3 ads()
     float cutoff = radians( clamp( Spot.cutoff, 0, 90 ) );
     vec3 ambient = Ka;
 
-    if(angle < cutoff)
+    if(true)
     {
         // float spotFactor = pow( (dot(-s, Spot.direction), Spot.exponent);
-        float spotFactor = cutoff-angle;
-        vec3 v = normalize(vec3(-Position));
-        vec3 h = normalize(v+s);
-        vec3 specular = spotFactor * Spot.intensity * Kd * max(dot(s, Normal), 0);
-        vec3 diffuse = spotFactor * Spot.intensity* Ks * pow(max(dot(h, Normal), 0), Shininess);
+        // float spotFactor = cutoff-angle;
+        // vec3 v = normalize(vec3(-Position));
+        // vec3 h = normalize(v+s);
+        // vec3 specular = spotFactor * Spot.intensity * Kd * max(dot(s, Normal), 0);
+        // vec3 diffuse = spotFactor * Spot.intensity* Ks * pow(max(dot(h, Normal), 0), Shininess);
+        vec3 specular = ambient;
+        vec3 diffuse = ambient;
 
         float shadow = textureProj(ShadowMap, ShadowCoord);
+        // return vec3(shadow, shadow, shadow);
 
-        return objectColor * ambient + objectColor * shadow * diffuse + shadow * specular;
+        return objectColor * ambient + objectColor * shadow * ambient;
     }
     else
     {
@@ -79,14 +73,8 @@ float fog(vec3 viewPos, vec3 pos)
     return min((FogEnd - length(viewPos - pos)) / (FogEnd - FogStart), 1);
 }
 
-subroutine (RenderPassType)
-void shadeWithShadow()
+void main()
 {
     vec4 c = vec4(ads(), 1);
     FragColor = FogIntensity*fog(ViewPosition, Position)*c + (1 - FogIntensity)*c;
-}
-
-void main()
-{
-    RenderPass();
 }

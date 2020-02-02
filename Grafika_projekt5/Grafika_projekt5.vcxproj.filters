@@ -196,5 +196,8 @@
     <None Include="book.vs">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="book_shadows.fs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
