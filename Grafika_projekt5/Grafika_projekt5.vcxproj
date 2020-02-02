@@ -181,8 +181,11 @@
     <None Include="book.fs" />
     <None Include="book.vs" />
     <None Include="book_shadows.fs" />
+    <None Include="book_shadows.vs" />
     <None Include="car_shadow_mvp.fs" />
     <None Include="car_shadow_mvp.vs" />
+    <None Include="debug_quad.fs" />
+    <None Include="debug_quad.vs" />
     <None Include="mvp.fs" />
     <None Include="mvp.vs" />
     <None Include="shadow_mvp.fs" />

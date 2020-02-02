@@ -25,6 +25,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+void renderQuad();
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -128,7 +129,8 @@ int main()
 	// build and compile shaders
 	// -------------------------
 	Shader ourShader("book.vs", "book.fs");
-	Shader shadowShader("book.vs", "book_shadows.fs");
+	Shader shadowShader("book_shadows.vs", "book_shadows.fs");
+	Shader debugDepthQuad("debug_quad.vs", "debug_quad.fs");
 
 	// init shader params
 	ourShader.use();
@@ -216,27 +218,18 @@ int main()
 		// --------------------------------------------------------------
 		glm::mat4 lightProjection, lightView;
 		float near_plane1 = 1.0f, far_plane1 = 100.f;
-		lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane1, far_plane1);
-		lightView = glm::lookAt(glm::vec3{ 0, 50, 0 }, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane1, far_plane1);
+		lightView = glm::lookAt(glm::vec3{ 0, 50, 0 }, glm::vec3{ 0, 0, 0 }, glm::vec3(1.0, 0.0, 0.0));
 		// render scene from light's point of view
 		glViewport(0, 0, shadowMapWidth, shadowMapHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		//glEnable(GL_FRONT_FACE);
+		glEnable(GL_FRONT_FACE);
 
 		shadowShader.use();
 
-		shadowShader.setMat4("ShadowMatrix", shadowMatrix);
-
-		shadowShader.setMat4("ProjectionMatrix", lightProjection);
-		shadowShader.setVec3("ViewPosition", glm::vec3{ 30, 30, 30 });
-
-		shadowShader.setMat4("ModelViewMatrix", sponza_model);
-		shadowShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
 		shadowShader.setMat4("MVP", lightProjection * lightView * sponza_model);
 		Sponza.Draw(shadowShader);
-		shadowShader.setMat4("ModelViewMatrix", car_model);
-		shadowShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
 		shadowShader.setMat4("MVP", lightProjection * lightView * car_model);
 		ridingCar.Draw(shadowShader);
 
@@ -253,11 +246,14 @@ int main()
 		// view/projection transformations
 		projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		//projection = lightProjection;
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(ourShader.ID, "ShadowMap"), 0);
+		glBindTexture(GL_TEXTURE_2D, depthTex);
 
 		// render the loaded model
 		ourShader.setMat4("ShadowMatrix", shadowMatrix);
 		
-		ourShader.setMat4("ProjectionMatrix", projection);
+		ourShader.setMat4("ProjectionMatrix", lightProjection);
 		ourShader.setVec3("ViewPosition", camera.Position);
 
 		ourShader.setFloat("FogStart", fog.start);
@@ -277,12 +273,23 @@ int main()
 
 		ourShader.setMat4("ModelViewMatrix", sponza_model);
 		ourShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
-		ourShader.setMat4("MVP", projection * view * sponza_model);
+		ourShader.setMat4("MVP", lightProjection * lightView * sponza_model);
 		Sponza.Draw(ourShader);
 		ourShader.setMat4("ModelViewMatrix", car_model);
 		ourShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
-		ourShader.setMat4("MVP", projection * view * car_model);
+		ourShader.setMat4("MVP", lightProjection * lightView * car_model);
 		ridingCar.Draw(ourShader);
+
+
+		// render Depth map to quad for visual debugging
+		// ---------------------------------------------
+		//debugDepthQuad.use();
+		//debugDepthQuad.setFloat("near_plane", near_plane1);
+		//debugDepthQuad.setFloat("far_plane", far_plane1);
+		//glActiveTexture(GL_TEXTURE0);
+		//glUniform1i(glGetUniformLocation(debugDepthQuad.ID, "depthMap"), 0);
+		//glBindTexture(GL_TEXTURE_2D, depthTex);
+		//renderQuad();
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -295,6 +302,38 @@ int main()
 	// ------------------------------------------------------------------
 	glfwTerminate();
 	return 0;
+}
+
+// renderQuad() renders a 1x1 XY quad in NDC
+// -----------------------------------------
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		std::cout << std::endl << "Quad0" << std::endl;
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly

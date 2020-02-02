@@ -199,5 +199,14 @@
     <None Include="book_shadows.fs">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="debug_quad.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="debug_quad.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="book_shadows.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

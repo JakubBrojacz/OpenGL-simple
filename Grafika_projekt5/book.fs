@@ -58,6 +58,7 @@ vec3 ads()
         vec3 diffuse = ambient;
 
         float shadow = textureProj(ShadowMap, ShadowCoord);
+        // shadow = 1;
         // return vec3(shadow, shadow, shadow);
 
         return objectColor * ambient + objectColor * shadow * ambient;
