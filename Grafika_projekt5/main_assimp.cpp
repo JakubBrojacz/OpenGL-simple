@@ -180,7 +180,7 @@ int main()
 		ourShader.setFloat("FogIntensity", fog.intensity);
 
 		ourShader.setVec4("Spot.position", glm::vec4(car_light_pos, 1));
-		ourShader.setVec3("Spot.intensity", 1.0f, 1.0f, 1.0f);
+		ourShader.setVec3("Spot.intensity", 4.0f, 4.0f, 4.0f);
 		ourShader.setVec3("Spot.direction", car_light_direction);
 		ourShader.setFloat("Spot.exponent", 0.1);
 		ourShader.setFloat("Spot.cutoff", 30);

@@ -28,7 +28,10 @@ uniform sampler2D texture_diffuse1;
 
 layout( location = 0 ) out vec4 FragColor;
 
-
+float attenuation(float dist)
+{
+    return 1 + 0.045 * dist + 0.0075 * dist * dist;
+}
 
 vec3 ads()
 {
@@ -49,8 +52,10 @@ vec3 ads()
         float spotFactor = cutoff-angle;
         vec3 v = normalize(vec3(-Position));
         vec3 h = normalize(v+s);
-        vec3 specular = spotFactor * Spot.intensity * Kd * max(dot(s, Normal), 0);
-        vec3 diffuse = spotFactor * Spot.intensity* Ks * pow(max(dot(h, Normal), 0), Shininess);
+        float light_distance = length( vec3( Spot.position ) - Position);
+        vec3 spotFinalIntensity = spotFactor * Spot.intensity / attenuation(light_distance);
+        vec3 specular = spotFinalIntensity * Kd * max(dot(s, Normal), 0);
+        vec3 diffuse = spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
 
         return objectColor * ambient + objectColor * specular + diffuse;
     }
