@@ -3,7 +3,6 @@
 in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoords;
-in vec4 ShadowCoord;
 
 struct SpotLightInfo
 {
@@ -27,8 +26,6 @@ uniform float FogEnd;
 
 uniform sampler2D texture_diffuse1;
 
-uniform sampler2DShadow ShadowMap;
-
 layout( location = 0 ) out vec4 FragColor;
 
 
@@ -46,21 +43,16 @@ vec3 ads()
     float cutoff = radians( clamp( Spot.cutoff, 0, 90 ) );
     vec3 ambient = Ka;
 
-    if(true)
+    if(angle < cutoff)
     {
-        // float spotFactor = pow( (dot(-s, Spot.direction), Spot.exponent);
-        // float spotFactor = cutoff-angle;
-        // vec3 v = normalize(vec3(-Position));
-        // vec3 h = normalize(v+s);
-        // vec3 specular = spotFactor * Spot.intensity * Kd * max(dot(s, Normal), 0);
-        // vec3 diffuse = spotFactor * Spot.intensity* Ks * pow(max(dot(h, Normal), 0), Shininess);
-        vec3 specular = ambient;
-        vec3 diffuse = ambient;
+        //float spotFactor = pow( dot(-s, Spot.direction), Spot.exponent);
+        float spotFactor = cutoff-angle;
+        vec3 v = normalize(vec3(-Position));
+        vec3 h = normalize(v+s);
+        vec3 specular = spotFactor * Spot.intensity * Kd * max(dot(s, Normal), 0);
+        vec3 diffuse = spotFactor * Spot.intensity* Ks * pow(max(dot(h, Normal), 0), Shininess);
 
-        float shadow = textureProj(ShadowMap, ShadowCoord);
-        // return vec3(shadow, shadow, shadow);
-
-        return objectColor * ambient + objectColor * shadow * ambient;
+        return objectColor * ambient + objectColor * specular + diffuse;
     }
     else
     {

@@ -137,57 +137,21 @@
   <ItemGroup>
     <ClCompile Include="Camera_m.h" />
     <ClCompile Include="Car.cpp" />
-    <ClCompile Include="CarPos.cpp" />
-    <ClCompile Include="DirectShadow.cpp" />
-    <ClCompile Include="DrawUtils.cpp" />
-    <ClCompile Include="Floor.cpp" />
     <ClCompile Include="Fog.cpp" />
     <ClCompile Include="glad.c" />
-    <ClCompile Include="Block.cpp" />
-    <ClCompile Include="House.cpp" />
-    <ClCompile Include="HousePos.cpp" />
-    <ClCompile Include="Lamp.cpp" />
-    <ClCompile Include="LampPos.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="main_assimp.cpp" />
-    <ClCompile Include="PointShadow.cpp" />
-    <ClCompile Include="WeelPos.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Car.h" />
-    <ClInclude Include="CarPos.h" />
-    <ClInclude Include="Block.h" />
-    <ClInclude Include="DirectShadow.h" />
-    <ClInclude Include="DrawUtils.h" />
-    <ClInclude Include="Floor.h" />
     <ClInclude Include="Fog.h" />
-    <ClInclude Include="House.h" />
-    <ClInclude Include="HouseParams.h" />
-    <ClInclude Include="HousePos.h" />
-    <ClInclude Include="Lamp.h" />
-    <ClInclude Include="LampPos.h" />
     <ClInclude Include="Mesh_m.h" />
     <ClInclude Include="Model_m.h" />
-    <ClInclude Include="PointShadow.h" />
     <ClInclude Include="Shader_m.h" />
     <ClInclude Include="stb_image.h" />
-    <ClInclude Include="Utils.h" />
-    <ClInclude Include="VItem.h" />
-    <ClInclude Include="WeelPos.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="1.model_loading.fs" />
-    <None Include="1.model_loading.vs" />
     <None Include="book.fs" />
     <None Include="book.vs" />
-    <None Include="book_shadows.fs" />
-    <None Include="car_shadow_mvp.fs" />
-    <None Include="car_shadow_mvp.vs" />
-    <None Include="mvp.fs" />
-    <None Include="mvp.vs" />
-    <None Include="shadow_mvp.fs" />
-    <None Include="shadow_mvp.gs" />
-    <None Include="shadow_mvp.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,12 +16,6 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{e0208c4b-e96d-43a8-a523-7d5d09346f79}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Positions">
-      <UniqueIdentifier>{324f1d6a-6a55-4a4a-95df-fb35b928d17c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Positions">
-      <UniqueIdentifier>{f76023c2-73bd-46e3-aa3a-fbc602a2c61d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Utils">
       <UniqueIdentifier>{4773f990-1bdd-407b-8585-b35fa8709673}</UniqueIdentifier>
     </Filter>
@@ -34,66 +28,21 @@
     <Filter Include="Source Files\External">
       <UniqueIdentifier>{d3ab9b74-6a10-46c9-ace7-3ef821934903}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Utils">
-      <UniqueIdentifier>{3e5e607f-2a97-471f-8cf2-0b60f4e5123b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Shadows">
-      <UniqueIdentifier>{2f14cd90-b30e-4b40-b993-89567d1e3db1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Shadows">
-      <UniqueIdentifier>{caaee544-1290-4318-a34f-d336723ae0df}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\External">
       <UniqueIdentifier>{2e9bb674-0e1f-44ab-bddc-96901e973834}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CarPos.cpp">
-      <Filter>Source Files\Positions</Filter>
-    </ClCompile>
-    <ClCompile Include="WeelPos.cpp">
-      <Filter>Source Files\Positions</Filter>
-    </ClCompile>
-    <ClCompile Include="HousePos.cpp">
-      <Filter>Source Files\Positions</Filter>
-    </ClCompile>
     <ClCompile Include="Camera_m.h">
       <Filter>Header Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Block.cpp">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
     <ClCompile Include="Car.cpp">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="House.cpp">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
     <ClCompile Include="glad.c">
       <Filter>Source Files\External</Filter>
     </ClCompile>
-    <ClCompile Include="LampPos.cpp">
-      <Filter>Source Files\Positions</Filter>
-    </ClCompile>
-    <ClCompile Include="DrawUtils.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Lamp.cpp">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="PointShadow.cpp">
-      <Filter>Source Files\Shadows</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShadow.cpp">
-      <Filter>Source Files\Shadows</Filter>
-    </ClCompile>
-    <ClCompile Include="Floor.cpp">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
     <ClCompile Include="main_assimp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Fog.cpp">
@@ -101,52 +50,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CarPos.h">
-      <Filter>Header Files\Positions</Filter>
-    </ClInclude>
-    <ClInclude Include="WeelPos.h">
-      <Filter>Header Files\Positions</Filter>
-    </ClInclude>
-    <ClInclude Include="HousePos.h">
-      <Filter>Header Files\Positions</Filter>
-    </ClInclude>
-    <ClInclude Include="HouseParams.h">
-      <Filter>Header Files\Positions</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="Shader_m.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="VItem.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Block.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="Car.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="House.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawUtils.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="LampPos.h">
-      <Filter>Header Files\Positions</Filter>
-    </ClInclude>
-    <ClInclude Include="Lamp.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="PointShadow.h">
-      <Filter>Header Files\Shadows</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShadow.h">
-      <Filter>Header Files\Shadows</Filter>
-    </ClInclude>
-    <ClInclude Include="Floor.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
     <ClInclude Include="Model_m.h">
@@ -163,40 +70,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="mvp.vs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="mvp.fs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shadow_mvp.fs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shadow_mvp.vs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shadow_mvp.gs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="car_shadow_mvp.fs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="car_shadow_mvp.vs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="1.model_loading.vs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="1.model_loading.fs">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="book.fs">
       <Filter>Shaders</Filter>
     </None>
     <None Include="book.vs">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="book_shadows.fs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

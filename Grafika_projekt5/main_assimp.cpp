@@ -8,17 +8,12 @@
 #include <iostream>
 
 #include "Car.h"
-#include "Block.h"
-#include "Lamp.h"
 #include "Fog.h"
 
 #include "Shader_m.h"
 #include "Camera_m.h"
 #include "Model_m.h"
 
-#include "DirectShadow.h"
-#include "PointShadow.h"
-#include "Floor.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -29,6 +24,10 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+// window
+unsigned int act_width = SCR_WIDTH;
+unsigned int act_height = SCR_HEIGHT;
 
 // camera
 Camera camera(glm::vec3(30, 30, 30));
@@ -43,10 +42,8 @@ float lastFrame = 0.0f;
 Fog fog(5, 10, 20);
 
 
-struct CameraMode
-{
-	enum Mode { Free, Car, Stationary, Following };
-};
+enum class CameraMode { Free, Car, Stationary, Following };
+
 auto cameraMode = CameraMode::Free;
 
 
@@ -89,46 +86,10 @@ int main()
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
 
-	// create shadow map
-	GLfloat border[] = { 1.0f,0.0f,0.0f,0.0f };
-	int shadowMapWidth = 1024;
-	int shadowMapHeight = 1024;
-
-	GLuint shadowFBO;
-	GLuint depthTex;
-	glGenTextures(1, &depthTex);
-	glBindTexture(GL_TEXTURE_2D, depthTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-		shadowMapWidth, shadowMapHeight,
-		0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
-
-	//Assign the shadow map to texture channel 0 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depthTex);
-
-	//Create and set up the FBO 
-	glGenFramebuffers(1, &shadowFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
-
-	GLenum drawBuffers[] = { GL_NONE };
-	glDrawBuffers(1, drawBuffers);
-	// Revert to the default framebuffer for now 
-	glBindFramebuffer(GL_FRAMEBUFFER,0); 
-
 
 	// build and compile shaders
 	// -------------------------
 	Shader ourShader("book.vs", "book.fs");
-	Shader shadowShader("book.vs", "book_shadows.fs");
 
 	// init shader params
 	ourShader.use();
@@ -145,12 +106,6 @@ int main()
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 projection = glm::mat4(1.0f);
-	glm::mat4 shadowMatrix{
-			0.5, 0, 0, 0.5,
-			0, 0.5, 0, 0.5,
-			0, 0, 0.5, 0.5,
-			0, 0, 0, 1
-	};
 
 	// render loop
 	// -----------
@@ -176,7 +131,7 @@ int main()
 		// -----------------------------------------------
 		auto car_model = glm::translate(car.Model(currentFrame), glm::vec3{ 0, -2.7, 0 });
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-			(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			(float)act_width / (float)act_height, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 
 		float near_plane = 0.1f;
@@ -187,8 +142,7 @@ int main()
 		car_light_pos += glm::vec3{ 0.2 * sin(car_rotation),0,0.2 * cos(car_rotation) };
 
 		glm::mat4 sponza_model = glm::mat4(1.0f);
-		//model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-		sponza_model = glm::scale(sponza_model, glm::vec3(0.02f, 0.02f, 0.02f));	// it's a bit too big for our scene, so scale it down
+		sponza_model = glm::scale(sponza_model, glm::vec3(0.02f, 0.02f, 0.02f));
 		car_model = car_model * glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
 
 		// 0.5. Configure camera
@@ -209,54 +163,15 @@ int main()
 			camera.Position = glm::vec3{ 0, 13.3949, -1.03434 };
 			view = glm::lookAt(camera.Position, car_light_pos, glm::vec3{ 0,1,0 });
 			break;
-		}
-
-
-		// 1. render scene for shadow map  
-		// --------------------------------------------------------------
-		glm::mat4 lightProjection, lightView;
-		float near_plane1 = 1.0f, far_plane1 = 100.f;
-		lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane1, far_plane1);
-		lightView = glm::lookAt(glm::vec3{ 0, 50, 0 }, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-		// render scene from light's point of view
-		glViewport(0, 0, shadowMapWidth, shadowMapHeight);
-		glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		//glEnable(GL_FRONT_FACE);
-
-		shadowShader.use();
-
-		shadowShader.setMat4("ShadowMatrix", shadowMatrix);
-
-		shadowShader.setMat4("ProjectionMatrix", lightProjection);
-		shadowShader.setVec3("ViewPosition", glm::vec3{ 30, 30, 30 });
-
-		shadowShader.setMat4("ModelViewMatrix", sponza_model);
-		shadowShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
-		shadowShader.setMat4("MVP", lightProjection * lightView * sponza_model);
-		Sponza.Draw(shadowShader);
-		shadowShader.setMat4("ModelViewMatrix", car_model);
-		shadowShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
-		shadowShader.setMat4("MVP", lightProjection * lightView * car_model);
-		ridingCar.Draw(shadowShader);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+		}	
 
 
 		// 2. render scene as normal using the generated depth/shadow map  
 		// --------------------------------------------------------------
-		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		ourShader.use();
 
-		// view/projection transformations
-		projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		//projection = lightProjection;
-
 		// render the loaded model
-		ourShader.setMat4("ShadowMatrix", shadowMatrix);
-		
 		ourShader.setMat4("ProjectionMatrix", projection);
 		ourShader.setVec3("ViewPosition", camera.Position);
 
@@ -361,6 +276,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
+	act_width = width;
+	act_height = height;
 }
 
 // glfw: whenever the mouse moves, this callback is called
