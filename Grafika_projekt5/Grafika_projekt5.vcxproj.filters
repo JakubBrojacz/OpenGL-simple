@@ -70,10 +70,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="book.fs">
+    <None Include="phong.fs">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="book.vs">
+    <None Include="phong.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="blinn.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="blinn.vs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

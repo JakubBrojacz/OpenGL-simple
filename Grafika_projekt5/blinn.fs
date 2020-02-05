@@ -41,21 +41,21 @@ vec3 ads()
         discard;
     vec3 objectColor = vec3(objectColor4);
 
-    vec3 s = normalize( vec3( Spot.position ) - Position );
-    float angle = acos( dot(-s, Spot.direction) );
+    vec3 lightDirection = normalize( vec3( Spot.position ) - Position );
+    float angle = acos( dot(-lightDirection, Spot.direction) );
     float cutoff = radians( clamp( Spot.cutoff, 0, 90 ) );
     vec3 ambient = Ka;
 
     if(angle < cutoff)
     {
-        //float spotFactor = pow( dot(-s, Spot.direction), Spot.exponent);
+        //float spotFactor = pow( dot(-lightDirection, Spot.direction), Spot.exponent);
         float spotFactor = cutoff-angle;
         vec3 v = normalize(vec3(-Position));
-        vec3 h = normalize(v+s);
-        float light_distance = length( vec3( Spot.position ) - Position);
-        vec3 spotFinalIntensity = spotFactor * Spot.intensity / attenuation(light_distance);
-        vec3 specular = spotFinalIntensity * Kd * max(dot(s, Normal), 0);
-        vec3 diffuse = spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
+        vec3 h = normalize(v+lightDirection);
+        float lightDistance = length( vec3( Spot.position ) - Position);
+        vec3 spotFinalIntensity = spotFactor * Spot.intensity / attenuation(lightDistance);
+        vec3 diffuse  = spotFinalIntensity * Kd * max(dot(lightDirection, Normal), 0);
+        vec3 specular = spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
 
         return objectColor * ambient + objectColor * specular + diffuse;
     }

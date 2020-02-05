@@ -89,7 +89,7 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("book.vs", "book.fs");
+	Shader ourShader("phong.vs", "phong.fs");
 
 	// init shader params
 	ourShader.use();

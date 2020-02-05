@@ -150,8 +150,10 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="book.fs" />
-    <None Include="book.vs" />
+    <None Include="blinn.fs" />
+    <None Include="blinn.vs" />
+    <None Include="phong.fs" />
+    <None Include="phong.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
