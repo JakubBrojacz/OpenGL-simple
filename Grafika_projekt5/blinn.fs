@@ -13,7 +13,7 @@ struct SpotLightInfo
     float cutoff;
 };
 
-uniform SpotLightInfo Spot;
+uniform SpotLightInfo Spot[3];
 uniform vec3 Kd;
 uniform vec3 Ka;
 uniform vec3 Ks;
@@ -41,28 +41,30 @@ vec3 ads()
         discard;
     vec3 objectColor = vec3(objectColor4);
 
-    vec3 lightDirection = normalize( vec3( Spot.position ) - Position );
-    float angle = acos( dot(-lightDirection, Spot.direction) );
-    float cutoff = radians( clamp( Spot.cutoff, 0, 90 ) );
     vec3 ambient = Ka;
+    vec3 specular = vec3(0);
+    vec3 diffuse = vec3(0);
 
-    if(angle < cutoff)
+    for(int i=0;i<3;i++)
     {
-        //float spotFactor = pow( dot(-lightDirection, Spot.direction), Spot.exponent);
-        float spotFactor = cutoff-angle;
-        vec3 v = normalize(vec3(-Position));
-        vec3 h = normalize(v+lightDirection);
-        float lightDistance = length( vec3( Spot.position ) - Position);
-        vec3 spotFinalIntensity = spotFactor * Spot.intensity / attenuation(lightDistance);
-        vec3 diffuse  = spotFinalIntensity * Kd * max(dot(lightDirection, Normal), 0);
-        vec3 specular = spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
+        vec3 lightDirection = normalize( vec3( Spot[i].position ) - Position );
+        float angle = acos( dot(-lightDirection, Spot[i].direction) );
+        float cutoff = radians( clamp( Spot[i].cutoff, 0, 90 ) );
 
-        return objectColor * ambient + objectColor * specular + diffuse;
+        if(angle < cutoff)
+        {
+            //float spotFactor = pow( dot(-lightDirection, Spot[i].direction), Spot[i].exponent);
+            float spotFactor = cutoff-angle;
+            vec3 v = normalize(vec3(-Position));
+            vec3 h = normalize(v+lightDirection);
+            float lightDistance = length( vec3( Spot[i].position ) - Position);
+            vec3 spotFinalIntensity = spotFactor * Spot[i].intensity / attenuation(lightDistance);
+            diffuse += spotFinalIntensity * Kd * max(dot(lightDirection, Normal), 0);
+            specular += spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
+        }
     }
-    else
-    {
-        return objectColor * ambient;
-    }
+
+    return objectColor * ambient + objectColor * specular + diffuse;
 }
 
 float fog(vec3 viewPos, vec3 pos)

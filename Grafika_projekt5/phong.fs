@@ -50,7 +50,7 @@ vec3 ads()
     {
         // float spotFactor = pow( dot(-lightDirection, Spot.direction), Spot.exponent);
         float spotFactor = cutoff-angle;
-        vec3 viewDirection = normalize(ViewPosition - vec3(-Position));
+        vec3 viewDirection = normalize(-Position);
         vec3 halfwayDirection = normalize(viewDirection+lightDirection);
         vec3 reflectDirection = reflect(-lightDirection, Normal);
         float lightDistance = length( vec3( Spot.position ) - Position);

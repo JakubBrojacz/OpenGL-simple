@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Car.h" />
+    <ClInclude Include="DayNight.h" />
     <ClInclude Include="Fog.h" />
     <ClInclude Include="Mesh_m.h" />
     <ClInclude Include="Model_m.h" />

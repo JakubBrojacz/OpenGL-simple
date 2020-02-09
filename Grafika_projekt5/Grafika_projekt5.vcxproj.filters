@@ -68,6 +68,9 @@
     <ClInclude Include="Fog.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="DayNight.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="phong.fs">

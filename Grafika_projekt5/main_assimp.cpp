@@ -39,8 +39,13 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// global entities
 Fog fog(5, 10, 20);
 
+// current shader
+std::shared_ptr<Shader> currentShader = nullptr;
+std::shared_ptr<Shader> phongShader = nullptr;
+std::shared_ptr<Shader> blinnShader = nullptr;
 
 enum class CameraMode { Free, Car, Stationary, Following };
 
@@ -86,13 +91,12 @@ int main()
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
 
-
-	// build and compile shaders
-	// -------------------------
-	Shader ourShader("phong.vs", "phong.fs");
-
+	
 	// init shader params
-	ourShader.use();
+	phongShader = std::make_shared<Shader>("phong.vs", "phong.fs");
+	blinnShader = std::make_shared<Shader>("blinn.vs", "blinn.fs");
+	currentShader = blinnShader;
+	currentShader->use();
 
 	// load models
 	// -----------
@@ -160,7 +164,7 @@ int main()
 			camera.Up = glm::vec3{ -0.304632, 0.91212, 0.274292 };
 			break;
 		case CameraMode::Following:
-			camera.Position = glm::vec3{ 0, 13.3949, -1.03434 };
+			camera.Position = glm::vec3{ 0, 22, -1.03434 };
 			view = glm::lookAt(camera.Position, car_light_pos, glm::vec3{ 0,1,0 });
 			break;
 		}	
@@ -169,35 +173,47 @@ int main()
 		// 2. render scene as normal using the generated depth/shadow map  
 		// --------------------------------------------------------------
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		ourShader.use();
+		currentShader->use();
 
 		// render the loaded model
-		ourShader.setMat4("ProjectionMatrix", projection);
-		ourShader.setVec3("ViewPosition", camera.Position);
+		currentShader->setMat4("ProjectionMatrix", projection);
+		currentShader->setVec3("ViewPosition", camera.Position);
+		
+		currentShader->setFloat("FogStart", fog.start);
+		currentShader->setFloat("FogEnd", fog.end);
+		currentShader->setFloat("FogIntensity", fog.intensity);
+		
+		currentShader->setVec4("Spot[0].position", glm::vec4{ 17, 26, -0.75f, 1});
+		currentShader->setVec3("Spot[0].intensity", 4.0f, 0.0f, 0.0f);
+		currentShader->setVec3("Spot[0].direction", glm::vec3{ 0, -1, 0 });
+		currentShader->setFloat("Spot[0].exponent", 0.1);
+		currentShader->setFloat("Spot[0].cutoff", 30);
 
-		ourShader.setFloat("FogStart", fog.start);
-		ourShader.setFloat("FogEnd", fog.end);
-		ourShader.setFloat("FogIntensity", fog.intensity);
+		currentShader->setVec4("Spot[1].position", glm::vec4{ -19, 26, -0.75f, 1 });
+		currentShader->setVec3("Spot[1].intensity", 0.0f, 0.0f, 4.0f);
+		currentShader->setVec3("Spot[1].direction", glm::vec3{ 0, -1, 0 });
+		currentShader->setFloat("Spot[1].exponent", 0.1);
+		currentShader->setFloat("Spot[1].cutoff", 30);
 
-		ourShader.setVec4("Spot.position", glm::vec4(car_light_pos, 1));
-		ourShader.setVec3("Spot.intensity", 4.0f, 4.0f, 4.0f);
-		ourShader.setVec3("Spot.direction", car_light_direction);
-		ourShader.setFloat("Spot.exponent", 0.1);
-		ourShader.setFloat("Spot.cutoff", 30);
+		currentShader->setVec4("Spot[2].position", glm::vec4(car_light_pos, 1));
+		currentShader->setVec3("Spot[2].intensity", 4.0f, 4.0f, 4.0f);
+		currentShader->setVec3("Spot[2].direction", car_light_direction);
+		currentShader->setFloat("Spot[2].exponent", 0.1);
+		currentShader->setFloat("Spot[2].cutoff", 30);
+		
+		currentShader->setVec3("Kd", 0.4, 0.4, 0.4);
+		currentShader->setVec3("Ka", 0.3, 0.3, 0.3);
+		currentShader->setVec3("Ks", 0.6, 0.6, 0.6);
+		currentShader->setFloat("Shininess", 0.1);
 
-		ourShader.setVec3("Kd", 0.2, 0.2, 0.2);
-		ourShader.setVec3("Ka", 0.1, 0.1, 0.1);
-		ourShader.setVec3("Ks", 0.3, 0.3, 0.3);
-		ourShader.setFloat("Shininess", 0.1);
-
-		ourShader.setMat4("ModelViewMatrix", sponza_model);
-		ourShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
-		ourShader.setMat4("MVP", projection * view * sponza_model);
-		Sponza.Draw(ourShader);
-		ourShader.setMat4("ModelViewMatrix", car_model);
-		ourShader.setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
-		ourShader.setMat4("MVP", projection * view * car_model);
-		ridingCar.Draw(ourShader);
+		currentShader->setMat4("ModelViewMatrix", sponza_model);
+		currentShader->setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
+		currentShader->setMat4("MVP", projection * view * sponza_model);
+		Sponza.Draw(*currentShader);
+		currentShader->setMat4("ModelViewMatrix", car_model);
+		currentShader->setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(car_model))));
+		currentShader->setMat4("MVP", projection * view * car_model);
+		ridingCar.Draw(*currentShader);
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -266,6 +282,16 @@ void processInput(GLFWwindow* window)
 	{
 		std::cout << "End fog" << std::endl;
 		fog.End();
+	}
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+	{
+		std::cout << "Activate Blinn lightning" << std::endl;
+		currentShader = blinnShader;
+	}
+	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+	{
+		std::cout << "Activate Phong lightning" << std::endl;
+		currentShader = phongShader;
 	}
 }
 
