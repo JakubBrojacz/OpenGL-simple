@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="Camera_m.h" />
     <ClCompile Include="Car.cpp" />
+    <ClCompile Include="DayNight.cpp" />
     <ClCompile Include="Fog.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="main_assimp.cpp" />

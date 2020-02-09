@@ -13,6 +13,7 @@ glm::vec3 Car::PositionVec3(float current_frame)
 	//{-23.9164, 11.5306, -8.11911}
 	//{23.9164, 11.5306, 8.11911}
 	float currentFrame = (int)current_frame % 30 + (current_frame - (int)current_frame);
+	//float currentFrame = 1;
 	if (currentFrame < 9)
 	{
 		return glm::vec3{ -5.1*currentFrame+23, 11, -8 };

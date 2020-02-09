@@ -9,6 +9,7 @@
 
 #include "Car.h"
 #include "Fog.h"
+#include "DayNight.h"
 
 #include "Shader_m.h"
 #include "Camera_m.h"
@@ -41,6 +42,7 @@ float lastFrame = 0.0f;
 
 // global entities
 Fog fog(5, 10, 20);
+DayNight sun(10);
 
 // current shader
 std::shared_ptr<Shader> currentShader = nullptr;
@@ -97,6 +99,7 @@ int main()
 	blinnShader = std::make_shared<Shader>("blinn.vs", "blinn.fs");
 	currentShader = blinnShader;
 	currentShader->use();
+	currentShader->setInt("mode", 0);
 
 	// load models
 	// -----------
@@ -121,6 +124,7 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		fog.Update(deltaTime);
+		sun.Update(deltaTime);
 
 		// input
 		// -----
@@ -155,7 +159,7 @@ int main()
 		{
 		case CameraMode::Car:
 			camera.Position = car_light_pos;
-			camera.Front = car_light_direction;
+			//camera.Front = car_light_direction;
 			camera.Up = glm::vec3{ 0, 1, 0 };
 			break;
 		case CameraMode::Stationary:
@@ -181,10 +185,13 @@ int main()
 		
 		currentShader->setFloat("FogStart", fog.start);
 		currentShader->setFloat("FogEnd", fog.end);
-		currentShader->setFloat("FogIntensity", fog.intensity);
+		currentShader->setFloat("FogIntensity", fog.intensity);\
+
+		currentShader->setVec3("Sun.intensity", sun.Color());
+		currentShader->setVec3("Sun.direction", sun.Direction());
 		
 		currentShader->setVec4("Spot[0].position", glm::vec4{ 17, 26, -0.75f, 1});
-		currentShader->setVec3("Spot[0].intensity", 4.0f, 0.0f, 0.0f);
+		currentShader->setVec3("Spot[0].intensity", 0.0f, 4.0f, 0.0f);
 		currentShader->setVec3("Spot[0].direction", glm::vec3{ 0, -1, 0 });
 		currentShader->setFloat("Spot[0].exponent", 0.1);
 		currentShader->setFloat("Spot[0].cutoff", 30);
@@ -286,12 +293,14 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 	{
 		std::cout << "Activate Blinn lightning" << std::endl;
-		currentShader = blinnShader;
+		currentShader->setInt("mode", 0);
+		//currentShader = blinnShader;
 	}
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
 	{
 		std::cout << "Activate Phong lightning" << std::endl;
-		currentShader = phongShader;
+		currentShader->setInt("mode", 1);
+		//currentShader = phongShader;
 	}
 }
 

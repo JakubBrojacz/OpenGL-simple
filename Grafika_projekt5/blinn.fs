@@ -14,10 +14,13 @@ struct SpotLightInfo
 };
 
 uniform SpotLightInfo Spot[3];
+uniform SpotLightInfo Sun;
 uniform vec3 Kd;
 uniform vec3 Ka;
 uniform vec3 Ks;
 uniform float Shininess;
+
+uniform int mode;
 
 uniform vec3 ViewPosition;
 uniform float FogIntensity;
@@ -45,6 +48,16 @@ vec3 ads()
     vec3 specular = vec3(0);
     vec3 diffuse = vec3(0);
 
+    // sun
+    { 
+        vec3 lightDirection = normalize( vec3( Sun.direction ) );
+        vec3 v = normalize(vec3(-Position));
+        vec3 r = reflect(-lightDirection, Normal);
+        diffuse += Sun.intensity * Kd * max(dot(lightDirection, Normal), 0);
+        specular += Sun.intensity * Ks * pow(max(dot(r, v), 0), Shininess);
+    }
+
+    // reflector
     for(int i=0;i<3;i++)
     {
         vec3 lightDirection = normalize( vec3( Spot[i].position ) - Position );
@@ -55,12 +68,30 @@ vec3 ads()
         {
             //float spotFactor = pow( dot(-lightDirection, Spot[i].direction), Spot[i].exponent);
             float spotFactor = cutoff-angle;
-            vec3 v = normalize(vec3(-Position));
-            vec3 h = normalize(v+lightDirection);
             float lightDistance = length( vec3( Spot[i].position ) - Position);
             vec3 spotFinalIntensity = spotFactor * Spot[i].intensity / attenuation(lightDistance);
+                
+            vec3 viewDirection = normalize(ViewPosition - vec3(Position));
+            
+            if(mode == 0)
+            {
+                // return viewDirection;
+
+                vec3 h = normalize(lightDirection + viewDirection);
+                specular += spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
+            }
+            else
+            {
+                vec3 reflectDir = reflect(lightDirection, Normal);
+                float reflectAngle = max(dot(reflectDir, viewDirection), 0);
+                // return viewDirection;
+                // return reflectDir;
+                // return vec3(max(dot(reflectDir, viewDirection), 0), max(dot(reflectDir, viewDirection), 0), max(dot(reflectDir, viewDirection), 0));
+                specular += spotFinalIntensity * Ks * pow(reflectAngle, Shininess);
+                // return specular;
+            }
+            
             diffuse += spotFinalIntensity * Kd * max(dot(lightDirection, Normal), 0);
-            specular += spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
         }
     }
 
