@@ -43,10 +43,14 @@ float lastFrame = 0.0f;
 
 // global entities
 Fog fog(5, 10, 20);
-DayNight sun(10);
+DayNight sun(100);
+Car car;
+float rotation_speed = 0.01;
 
 // shader
 std::shared_ptr<Shader> mainShader;
+std::shared_ptr<Shader> phong;
+std::shared_ptr<Shader> gouraud;
 
 enum class CameraMode { Free, Car, Stationary, Following };
 
@@ -91,10 +95,12 @@ int main()
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
-	
 	// init shader params
-	mainShader = std::make_shared<Shader>("blinn.vs", "blinn.fs");
+	phong = std::make_shared<Shader>("blinn.vs", "blinn.fs");
+	gouraud = std::make_shared<Shader>("gouraud.vs", "gouraud.fs");
+	mainShader = phong;
 	mainShader->use();
 	mainShader->setInt("mode", 0);
 
@@ -103,7 +109,6 @@ int main()
 	Model Sponza("../models/sponza/sponza.obj");
 	Model ridingCar("../models/formula1/Formula_1_mesh.obj");
 
-	Car car;
 
 	// init mvp matrices
 	// ------------------------------------
@@ -142,8 +147,16 @@ int main()
 		float near_plane = 0.1f;
 		float far_plane = 12.0f;
 		auto car_rotation = car.Rotation(currentFrame);
-		auto car_light_direction = glm::vec3{ -cos(car_rotation),0,sin(car_rotation) };
+		auto camera_direction = glm::vec3{
+			-cos(car_rotation),
+			0,
+			sin(car_rotation)};
+		auto car_light_direction = glm::vec3{
+			-cos(car_rotation + car.rotation_horizontal) * sin(car.rotation_vertical),
+			cos(car.rotation_vertical),
+			sin(car_rotation + car.rotation_horizontal) * sin(car.rotation_vertical) };
 		auto car_light_pos = car.PositionVec3(currentFrame) + glm::vec3{ 0,-1,0 };
+		auto camera_pos = car_light_pos;
 		car_light_pos += glm::vec3{ 0.2 * sin(car_rotation),0,0.2 * cos(car_rotation) };
 
 		glm::mat4 sponza_model = glm::mat4(1.0f);
@@ -155,8 +168,8 @@ int main()
 		switch (cameraMode)
 		{
 		case CameraMode::Car:
-			camera.Position = car_light_pos;
-			camera.Front = car_light_direction;
+			camera.Position = camera_pos;
+			camera.Front = camera_direction;
 			camera.Up = glm::vec3{ 0, 1, 0 };
 			break;
 		case CameraMode::Stationary:
@@ -168,7 +181,7 @@ int main()
 			camera.Position = glm::vec3{ 0, 22, -1.03434 };
 			view = glm::lookAt(camera.Position, car_light_pos, glm::vec3{ 0,1,0 });
 			break;
-		}	
+		}
 
 
 		// 2. render scene as normal using the generated depth/shadow map  
@@ -179,36 +192,36 @@ int main()
 		// render the loaded model
 		mainShader->setMat4("ProjectionMatrix", projection);
 		mainShader->setVec3("ViewPosition", camera.Position);
-		
+
 		mainShader->setFloat("FogStart", fog.start);
 		mainShader->setFloat("FogEnd", fog.end);
-		mainShader->setFloat("FogIntensity", fog.intensity);\
+		mainShader->setFloat("FogIntensity", fog.intensity);
 
 		mainShader->setVec3("Sun.intensity", sun.Color());
 		mainShader->setVec3("Sun.direction", sun.Direction());
-		
-		mainShader->setVec4("Spot[0].position", glm::vec4{ 17, 26, -0.75f, 1});
-		mainShader->setVec3("Spot[0].intensity", 0.0f, 4.0f, 0.0f);
+
+		mainShader->setVec4("Spot[0].position", glm::vec4{ 17, 26, -0.75f, 1 });
+		mainShader->setVec3("Spot[0].intensity", 0.0f, 1.0f, 0.0f);
 		mainShader->setVec3("Spot[0].direction", glm::vec3{ 0, -1, 0 });
 		mainShader->setFloat("Spot[0].exponent", 0.1);
 		mainShader->setFloat("Spot[0].cutoff", 30);
 
 		mainShader->setVec4("Spot[1].position", glm::vec4{ -19, 26, -0.75f, 1 });
-		mainShader->setVec3("Spot[1].intensity", 0.0f, 0.0f, 4.0f);
+		mainShader->setVec3("Spot[1].intensity", 0.0f, 0.0f, 1.0f);
 		mainShader->setVec3("Spot[1].direction", glm::vec3{ 0, -1, 0 });
 		mainShader->setFloat("Spot[1].exponent", 0.1);
 		mainShader->setFloat("Spot[1].cutoff", 30);
 
 		mainShader->setVec4("Spot[2].position", glm::vec4(car_light_pos, 1));
-		mainShader->setVec3("Spot[2].intensity", 4.0f, 4.0f, 4.0f);
+		mainShader->setVec3("Spot[2].intensity", 1.0f, 1.0f, 1.0f);
 		mainShader->setVec3("Spot[2].direction", car_light_direction);
 		mainShader->setFloat("Spot[2].exponent", 0.1);
 		mainShader->setFloat("Spot[2].cutoff", 30);
-		
-		mainShader->setVec3("Kd", 0.4, 0.4, 0.4);
-		mainShader->setVec3("Ka", 0.3, 0.3, 0.3);
-		mainShader->setVec3("Ks", 0.6, 0.6, 0.6);
-		mainShader->setFloat("Shininess", 0.1);
+
+		mainShader->setVec3("Kd", 0.5, 0.5, 0.5);
+		mainShader->setVec3("Ka", sun.Ambient());
+		mainShader->setVec3("Ks", 1.0, 1.0, 1.0);
+		mainShader->setFloat("Shininess", 200);
 
 		mainShader->setMat4("ModelViewMatrix", sponza_model);
 		mainShader->setMat3("NormalMatrix", glm::transpose(glm::inverse(glm::mat3(sponza_model))));
@@ -250,7 +263,16 @@ void processInput(GLFWwindow* window)
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 			camera.ProcessKeyboard(RIGHT, deltaTime);
 	}
-	
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		car.rotation_vertical += rotation_speed;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		car.rotation_vertical -= rotation_speed;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		car.rotation_horizontal += rotation_speed;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		car.rotation_horizontal -= rotation_speed;
+
 
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
@@ -303,6 +325,20 @@ void processInput(GLFWwindow* window)
 	{
 		std::cout << "Activate Phong lightning" << std::endl;
 		mainShader->setInt("mode", 1);
+	}
+	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+	{
+		std::cout << "Activate Phong shading" << std::endl;
+		mainShader = phong;
+		mainShader->use();
+		mainShader->setInt("mode", 0);
+	}
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+	{
+		std::cout << "Activate Gouraud lightning" << std::endl;
+		mainShader = gouraud;
+		mainShader->use();
+		mainShader->setInt("mode", 0);
 	}
 }
 

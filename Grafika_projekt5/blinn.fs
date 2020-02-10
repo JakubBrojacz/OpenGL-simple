@@ -33,7 +33,7 @@ layout( location = 0 ) out vec4 FragColor;
 
 float attenuation(float dist)
 {
-    return 1 + 0.045 * dist + 0.0075 * dist * dist;
+    return 1 + 0.007 * dist + 0.0002 * dist * dist;
 }
 
 vec3 ads()
@@ -48,7 +48,7 @@ vec3 ads()
     vec3 specular = vec3(0);
     vec3 diffuse = vec3(0);
 
-    // sun
+    // // sun
     { 
         vec3 lightDirection = normalize( vec3( Sun.direction ) );
         vec3 v = normalize(vec3(-Position));
@@ -66,10 +66,11 @@ vec3 ads()
 
         if(angle < cutoff)
         {
-            //float spotFactor = pow( dot(-lightDirection, Spot[i].direction), Spot[i].exponent);
+            float spotFactorSpecular = pow( dot(-lightDirection, Spot[i].direction), Spot[i].exponent);
             float spotFactor = cutoff-angle;
             float lightDistance = length( vec3( Spot[i].position ) - Position);
             vec3 spotFinalIntensity = spotFactor * Spot[i].intensity / attenuation(lightDistance);
+            vec3 spotFinalIntensitySpecular = spotFactorSpecular * Spot[i].intensity / attenuation(lightDistance);
                 
             vec3 viewDirection = normalize(ViewPosition - vec3(Position));
             
@@ -78,16 +79,16 @@ vec3 ads()
                 // return viewDirection;
 
                 vec3 h = normalize(lightDirection + viewDirection);
-                specular += spotFinalIntensity * Ks * pow(max(dot(h, Normal), 0), Shininess);
+                specular += spotFinalIntensitySpecular * Ks * pow(max(dot(h, Normal), 0), Shininess);
             }
             else
             {
-                vec3 reflectDir = reflect(lightDirection, Normal);
+                vec3 reflectDir = reflect(-lightDirection, Normal);
                 float reflectAngle = max(dot(reflectDir, viewDirection), 0);
                 // return viewDirection;
                 // return reflectDir;
                 // return vec3(max(dot(reflectDir, viewDirection), 0), max(dot(reflectDir, viewDirection), 0), max(dot(reflectDir, viewDirection), 0));
-                specular += spotFinalIntensity * Ks * pow(reflectAngle, Shininess);
+                specular += spotFinalIntensitySpecular * Ks * pow(reflectAngle, Shininess);
                 // return specular;
             }
             
@@ -95,7 +96,7 @@ vec3 ads()
         }
     }
 
-    return objectColor * ambient + objectColor * specular + diffuse;
+    return clamp(objectColor * (ambient + specular + diffuse), 0, 1);
 }
 
 float fog(vec3 viewPos, vec3 pos)

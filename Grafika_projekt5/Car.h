@@ -23,5 +23,8 @@ public:
 
 	glm::mat4 Model(float current_frame);
 
+	float rotation_vertical=glm::pi<float>()/2;
+	float rotation_horizontal=0;
+
 	~Car();
 };

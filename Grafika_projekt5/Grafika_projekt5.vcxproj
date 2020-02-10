@@ -154,8 +154,8 @@
   <ItemGroup>
     <None Include="blinn.fs" />
     <None Include="blinn.vs" />
-    <None Include="phong.fs" />
-    <None Include="phong.vs" />
+    <None Include="gouraud.fs" />
+    <None Include="gouraud.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -11,7 +11,7 @@ public:
 	DayNight(float time);
 
 	void Update(float delta);
-	float Ambient();
+	glm::vec3 Ambient();
 	glm::vec3 Color();
 	glm::vec3 Direction();
 
