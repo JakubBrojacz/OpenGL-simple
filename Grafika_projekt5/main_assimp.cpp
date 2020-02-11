@@ -54,7 +54,7 @@ std::shared_ptr<Shader> gouraud;
 
 enum class CameraMode { Free, Car, Stationary, Following };
 
-auto cameraMode = CameraMode::Free;
+auto cameraMode = CameraMode::Following;
 
 
 
@@ -69,7 +69,7 @@ int main()
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "GK", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -274,13 +274,13 @@ void processInput(GLFWwindow* window)
 		car.rotation_horizontal -= rotation_speed;
 
 
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	/*if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		std::cout << "{" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << "}" << std::endl;
 		std::cout << "{" << camera.Front.x << ", " << camera.Front.y << ", " << camera.Front.z << "}" << std::endl;
 		std::cout << "{" << camera.Up.x << ", " << camera.Up.y << ", " << camera.Up.z << "}" << std::endl;
 		std::cout << "deltatime: " << deltaTime << std::endl;
-	}
+	}*/
 
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 	{
@@ -378,7 +378,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	if (!cameraLocked)
-		camera.ProcessMouseScroll(yoffset);
+	/*if (!cameraLocked)
+		camera.ProcessMouseScroll(yoffset);*/
 }
 
